@@ -16,7 +16,7 @@ final class keyBoardHandle{
     fileprivate var _enable = true
 
     // 鍵盤跟 FirstResponder 的距離
-    var space : CGFloat = 30
+    var space : CGFloat = 44
     
     // 是否啟用鍵盤管理
     var isEnable : Bool {
@@ -26,9 +26,21 @@ final class keyBoardHandle{
         set{
             _enable = newValue
             if newValue{
+                
+                
                 NotificationCenter.default.removeObserver(self)
-                NotificationCenter.default.addObserver(self, selector: #selector(self.keyboardWillShow(noti:)), name: NSNotification.Name.UIKeyboardWillShow, object: nil)
-                NotificationCenter.default.addObserver(self, selector: #selector(self.keyboardWillHide(noti:)), name: NSNotification.Name.UIKeyboardWillHide, object: nil)
+               
+                //Swift 4.2
+                NotificationCenter.default.addObserver(
+                    self,
+                    selector: #selector(self.keyboardWillShow(noti:)),
+                    name: UIResponder.keyboardDidShowNotification, object: nil)
+                
+                NotificationCenter.default.addObserver(
+                    self,
+                    selector: #selector(self.keyboardWillHide(noti:)),
+                    name: UIResponder.keyboardWillHideNotification, object: nil)
+                //
             }else{
                 NotificationCenter.default.removeObserver(self)
             }
@@ -44,13 +56,13 @@ final class keyBoardHandle{
         // 第一件事 取得鍵盤的高度以及動畫時間
         // 第二件事 找出誰是 FirstResponder
         // 第三件事 根據鍵盤高度 跟 FirstResponder 的位置 調整畫面
-        guard let keyboardHeight = (noti.userInfo?[UIKeyboardFrameBeginUserInfoKey] as? NSValue)?.cgRectValue.height else {
+        guard let keyboardHeight = (noti.userInfo?[UIResponder.keyboardFrameBeginUserInfoKey] as? NSValue)?.cgRectValue.height else {
             return
         }
-        guard let duration = (noti.userInfo?[UIKeyboardAnimationDurationUserInfoKey] as? NSValue) as? TimeInterval else {
+        guard let duration = (noti.userInfo?[UIResponder.keyboardAnimationDurationUserInfoKey] as? NSValue) as? TimeInterval else {
             return
         }
-        guard let animationOptions = (noti.userInfo?[UIKeyboardAnimationCurveUserInfoKey] as? NSNumber)?.intValue else {
+        guard let animationOptions = (noti.userInfo?[UIResponder.keyboardAnimationCurveUserInfoKey] as? NSNumber)?.intValue else {
             return
         }
         guard let top = topVC() else{
@@ -59,7 +71,7 @@ final class keyBoardHandle{
         
 
         let screenHeight = top.view.frame.height
-        let options = UIViewAnimationOptions.init(rawValue: UInt(animationOptions<<16))
+        let options = UIView.AnimationOptions.init(rawValue: UInt(animationOptions<<16))
         
         if top is UIAlertController{
             // 不處理 因為該 UIAlertController 自己有處理了
@@ -88,16 +100,16 @@ final class keyBoardHandle{
     @objc func keyboardWillHide(noti: Notification) {
         // 第一件事 取得鍵盤關閉的動畫時間
         // 第二件事 將螢幕調回原本的位置 使用鍵盤關閉的動畫時間
-        guard let duration = (noti.userInfo?[UIKeyboardAnimationDurationUserInfoKey] as? NSValue) as? TimeInterval else {
+        guard let duration = (noti.userInfo?[UIResponder.keyboardAnimationDurationUserInfoKey] as? NSValue) as? TimeInterval else {
             return
         }
-        guard let animationOptions = (noti.userInfo?[UIKeyboardAnimationCurveUserInfoKey] as? NSNumber)?.intValue else {
+        guard let animationOptions = (noti.userInfo?[UIResponder.keyboardAnimationCurveUserInfoKey] as? NSNumber)?.intValue else {
             return
         }
         guard let top = topVC() else{
             return
         }
-        let options = UIViewAnimationOptions.init(rawValue: UInt(animationOptions<<16))
+        let options = UIView.AnimationOptions.init(rawValue: UInt(animationOptions<<16))
         
         if top is UIAlertController{
             // 不處理 因為該 UIAlertController 自己有處理了
@@ -148,7 +160,7 @@ extension UIResponder {
         return UIResponder._currentFirstResponder
     }
     
-    internal func findFirstResponder(sender: AnyObject) {
+    @objc internal func findFirstResponder(sender: AnyObject) {
         UIResponder._currentFirstResponder = self
     }
 }
